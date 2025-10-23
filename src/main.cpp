@@ -5,7 +5,7 @@
 /*    Author:       Andrew Bobay                                              */
 /*    Team:         BBR1                                                      */
 /*    Created:      Sep. 30th 2025, 2:30 PM                                   */
-/*    Modified:     Oct. 20th 2025, 12:10 PM                                  */
+/*    Modified:     Oct. 23rd 2025, 07:00 PM                                  */
 /*    Description:  V5 project                                                */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
@@ -20,16 +20,14 @@ controller Controller = controller(primary);
 competition Competition;
 motor drive_fr = motor(PORT1, ratio6_1, false);
 motor drive_br = motor(PORT2, ratio6_1, false);
-motor drive_tr = motor(PORT3, ratio6_1, true);
 motor drive_fl = motor(PORT4, ratio6_1, true);
 motor drive_bl = motor(PORT5, ratio6_1, true);
-motor drive_tl = motor(PORT6, ratio6_1, false);
 
-motor_group drive_right = motor_group(drive_fr, drive_br, drive_tr);
-motor_group drive_left = motor_group(drive_fl, drive_bl, drive_tl);
-motor_group dumb_drive = motor_group(drive_fr, drive_br, drive_tr, drive_fl, drive_bl, drive_tl); // group of all of the drive motors used in 
+motor_group drive_right = motor_group(drive_fr, drive_br);
+motor_group drive_left = motor_group(drive_fl, drive_bl);
 
 inertial IMU = inertial(PORT7);
+// Included below are example values, CHANGE THEM FOR YOUR ROBOT
 double wheel_travel = 260; // Given by vex
 double track_width = 285.75; // Distance between the 2 drive sides
 double wheel_base = 177.8; // Distance between the front and back axels
@@ -41,8 +39,7 @@ smartdrive Drivetrain = smartdrive(drive_left, drive_right, IMU, wheel_travel, t
 motor smartmtr = motor(PORT11, ratio6_1, false);
 pneumatics piston = pneumatics(Brain.ThreeWirePort.A);
 
-// define your global instances of motors and other devices here
-
+// define control booleans for driver control here
 bool drive_right_bool = true;
 bool drive_left_bool = true;
 bool piston_toggle = false;
@@ -60,8 +57,7 @@ bool smartmtr_bool = true;
 
 void pre_auton(void) {
 
-  // All activities that occur before the competition starts
-  // Example: clearing encoders, setting servo positions, ...
+// Basic Intertial Calibration 
 Brain.Screen.print("Device Init...");
 Brain.Screen.setCursor(2,1);
 wait(200, msec);
@@ -73,6 +69,7 @@ while (IMU.isCalibrating()){
 Brain.Screen.setCursor(3,1);
 Brain.Screen.print("Inertial Calibration Complete");
 
+// Set Velocity and clear encoders 
 Drivetrain.setDriveVelocity(100, percent);
 }
 
@@ -80,7 +77,7 @@ Drivetrain.setDriveVelocity(100, percent);
 /*                          Autonomous Functions                             */
 /*                                                                           */
 /*  Use This space to define functions to be used in autonomous,             */
-/*  This includes control loops like PID, or Odomtry                         */                                                                    \
+/*  This includes control loops like PID, or Odomtry                         */                                                                    
 /*---------------------------------------------------------------------------*/
 
 
@@ -116,8 +113,10 @@ void usercontrol(void) {
     // This is the main execution loop for the user control program.
     // Each time through the loop your program should update motor + servo
     // values based on feedback from the joysticks.
-
+    
     // ........................................................................
+
+    // Example Arcade stick control, I reccomend tuning some of these values to fit your driving style
     int drivetrain_right_speed = (Controller.Axis3.position()) - Controller.Axis1.position();
     int drivetrain_left_speed = (Controller.Axis3.position()) + Controller.Axis1.position();
 
@@ -147,7 +146,7 @@ void usercontrol(void) {
         drive_right.spin(forward);
       }
 
-      // Motor Controllers
+      // Motor Contoller
       if (Controller.ButtonR1.pressing()) {
         smartmtr.spin(reverse);
         smartmtr_bool = false;
@@ -158,6 +157,7 @@ void usercontrol(void) {
         smartmtr.stop();
         smartmtr_bool = true;
       }
+      // Basic Toggle Controller
       if (Controller.ButtonL2.pressing()) {
         piston_toggle = !piston_toggle;
         while (Controller.ButtonL2.pressing()){}
