@@ -1,13 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/*    Program:      BBR1 15 WPI                                               */
+/*    Program:      241E Codebase (Vexcode)                                   */
 /*    Module:       main.cpp                                                  */
 /*    Author:       Andrew Bobay                                              */
 /*    Team:         BBR1                                                      */
 /*    Created:      Sep. 30th 2025, 2:30 PM                                   */
 /*    Modified:     Oct. 23rd 2025, 07:00 PM                                  */
-/*    Description:  Janky thrown together code for                            */
-/*                   our first skills run at WPI                              */
+/*    Description:  V5 project                                                */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
@@ -21,44 +20,30 @@ controller Controller = controller(primary);
 competition Competition;
 motor drive_fr = motor(PORT1, ratio6_1, false);
 motor drive_br = motor(PORT2, ratio6_1, false);
-motor drive_tr = motor(PORT3, ratio6_1, true);
 motor drive_fl = motor(PORT4, ratio6_1, true);
 motor drive_bl = motor(PORT5, ratio6_1, true);
-motor drive_tl = motor(PORT6, ratio6_1, false);
 
-
-motor_group drive_right = motor_group(drive_fr, drive_br, drive_tr);
-motor_group drive_left = motor_group(drive_fl, drive_bl, drive_tl);
+motor_group drive_right = motor_group(drive_fr, drive_br);
+motor_group drive_left = motor_group(drive_fl, drive_bl);
 
 inertial IMU = inertial(PORT7);
 // Included below are example values, CHANGE THEM FOR YOUR ROBOT
 double wheel_travel = 260; // Given by vex
-double track_width = 298.45; // Distance between the 2 drive sides
+double track_width = 285.75; // Distance between the 2 drive sides
 double wheel_base = 177.8; // Distance between the front and back axels
 double wheel_c = 10.21; // Circumfrence of wheels
 double gear_ratio = (36/48); // (Motorin/MotorOut)
 smartdrive Drivetrain = smartdrive(drive_left, drive_right, IMU, wheel_travel, track_width, wheel_base, mm, gear_ratio);
 
 
-motor intake_left = motor(PORT8, ratio6_1, false);
-motor intake_right = motor(PORT9, ratio6_1, true);
-motor outtake_lower = motor(PORT10, ratio18_1, true);
-motor outtake_upper = motor(PORT11, ratio6_1, false); 
-motor_group intake = motor_group(intake_left, intake_right, outtake_lower, outtake_upper);
-
-
-pneumatics liftR = pneumatics(Brain.ThreeWirePort.A);
-pneumatics liftL = pneumatics(Brain.ThreeWirePort.B);
-
-pneumatics door = pneumatics(Brain.ThreeWirePort.C);
-
+motor smartmtr = motor(PORT11, ratio6_1, false);
+pneumatics piston = pneumatics(Brain.ThreeWirePort.A);
 
 // define control booleans for driver control here
 bool drive_right_bool = true;
 bool drive_left_bool = true;
-bool lift_toggle_bool = false;
-bool door_toggle_bool = false;
-bool intake_control_bool = true;
+bool piston_toggle = false;
+bool smartmtr_bool = true;
 
 /*---------------------------------------------------------------------------*/
 /*                          Pre-Autonomous Functions                         */
@@ -108,26 +93,7 @@ Drivetrain.setDriveVelocity(100, percent);
 
 void autonomous(void) {
   // ..........................................................................
-  /* Skills Planning 
-  1R - 0B
-  drive to match loader
-  4R - 3B
-  drive to goal
-  dump
-  0R - 0B
-  Grab 2 blocks on wall
-  0R - 2B
-  drive to goal
-  dump
-  0R - 0B
-  Drive to park Zone
-  Clear Park zone
-  Park
-
-  39 Solo
-  
-  */
-  
+  // Insert autonomous user code here.
   // ..........................................................................
 }
 
@@ -151,8 +117,8 @@ void usercontrol(void) {
     // ........................................................................
 
     // Example Arcade stick control, I reccomend tuning some of these values to fit your driving style
-    int drivetrain_right_speed = (Controller.Axis3.position()) - pow(1.047,Controller.Axis1.position()); 
-    int drivetrain_left_speed = (Controller.Axis3.position()) + pow(1.047,Controller.Axis1.position()); 
+    int drivetrain_right_speed = (Controller.Axis3.position()) - Controller.Axis1.position();
+    int drivetrain_left_speed = (Controller.Axis3.position()) + Controller.Axis1.position();
 
     if (fabs(drivetrain_left_speed) < 5){
       if (drive_left_bool){
@@ -180,39 +146,25 @@ void usercontrol(void) {
         drive_right.spin(forward);
       }
 
-      // Intake Contoller
+      // Motor Contoller
       if (Controller.ButtonR1.pressing()) {
-        intake.spin(fwd);
-        intake_control_bool = false;
+        smartmtr.spin(reverse);
+        smartmtr_bool = false;
       } else if (Controller.ButtonR2.pressing()) {
-        intake.spin(fwd);
-        intake_control_bool = false;
-      } else if (!intake_control_bool) {
-        intake.stop();
-        intake_control_bool = true;
+        smartmtr.spin(fwd);
+        smartmtr_bool = false;
+      } else if (!smartmtr_bool) {
+        smartmtr.stop();
+        smartmtr_bool = true;
       }
-
-      // Lift Controller
-      if (Controller.ButtonL2.pressing()) {
-        lift_toggle_bool = !lift_toggle_bool;
-        while (Controller.ButtonL2.pressing()){}
-          if (lift_toggle_bool) {
-            liftL.open();
-            liftR.open();
-          } else {
-            liftL.close();
-            liftR.close();
-          }
-        }
-
       // Basic Toggle Controller
-      if (Controller.ButtonR1.pressing()) {
-        door_toggle_bool = !door_toggle_bool;
-        while (Controller.ButtonR1.pressing()){}
-          if (door_toggle_bool) {
-            door.open();
+      if (Controller.ButtonL2.pressing()) {
+        piston_toggle = !piston_toggle;
+        while (Controller.ButtonL2.pressing()){}
+          if (piston_toggle) {
+            piston.open();
           } else {
-            door.close();
+            piston.close();
           }
         }
 
